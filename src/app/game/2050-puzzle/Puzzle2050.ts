@@ -29,12 +29,13 @@ export interface ModeConfig {
   maxK: number
   label: string
   target: number
+  spawnHigh: number
 }
 
 /** maxK = highest exponent that may exist on the board. Merging two of them wins. */
 export const MODES: Record<Mode, ModeConfig> = {
-  normal: { maxK: 8, label: 'Normal', target: 2560 },
-  pro: { maxK: 10, label: 'Pro', target: 10240 },
+  normal: { maxK: 8, label: 'Normal', target: 2560, spawnHigh: 0.3 },
+  pro: { maxK: 10, label: 'Pro', target: 10240, spawnHigh: 0.1 },
 }
 
 export const valueOf = (k: number): number => 5 * 2 ** k
@@ -140,10 +141,11 @@ export const move = (
   return { grid: result, gained, moved, won, nextId: id }
 }
 
-/** Adds one tile (k=0 90%, k=1 10%) on a random empty cell. Returns the same grid if full. */
+/** Adds one tile (k=1 with the mode's spawnHigh chance, else k=0) on a random empty cell. Returns the same grid if full. */
 export const spawnTile = (
   grid: Grid,
   nextId: number,
+  mode: Mode = 'pro',
   rng: Rng = Math.random,
 ): { grid: Grid; nextId: number } => {
   const empty: [number, number][] = []
@@ -152,7 +154,7 @@ export const spawnTile = (
   if (empty.length === 0) return { grid, nextId }
 
   const [r, c] = empty[Math.min(empty.length - 1, Math.floor(rng() * empty.length))]
-  const k = rng() < 0.9 ? 0 : 1
+  const k = rng() < MODES[mode].spawnHigh ? 1 : 0
   const copy = grid.map(row => row.slice())
   copy[r][c] = { id: nextId, k, row: r, col: c, isNew: true }
   return { grid: copy, nextId: nextId + 1 }
@@ -162,8 +164,8 @@ export const createInitialGrid = (
   rng: Rng = Math.random,
 ): { grid: Grid; nextId: number } => {
   let state = { grid: emptyGrid(), nextId: 1 }
-  state = spawnTile(state.grid, state.nextId, rng)
-  state = spawnTile(state.grid, state.nextId, rng)
+  state = spawnTile(state.grid, state.nextId, 'pro', rng)
+  state = spawnTile(state.grid, state.nextId, 'pro', rng)
   return state
 }
 

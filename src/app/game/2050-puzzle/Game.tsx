@@ -90,7 +90,7 @@ const Game = () => {
         return
       }
 
-      const spawned = spawnTile(res.grid, res.nextId)
+      const spawned = spawnTile(res.grid, res.nextId, mode)
       setGrid(spawned.grid)
       setNextId(spawned.nextId)
       if (!canMove(spawned.grid)) setStatus('lost')
